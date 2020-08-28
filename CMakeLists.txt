@@ -12,7 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   message_generation
-
+  sensor_msgs
+  message_filters
 )
 
 ## System dependencies are found with CMake's conventions
@@ -109,7 +110,7 @@ catkin_package(
 #  LIBRARIES neon
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
-  CATKIN_DEPENDS message_runtime
+  CATKIN_DEPENDS message_runtime sensor_msgs
 )
 
 ###########
@@ -207,3 +208,7 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+add_executable(Slam src/Slam.cpp)
+target_link_libraries(Slam ${catkin_LIBRARIES})
+add_dependencies(Slam neon_generate_messages_cpp)

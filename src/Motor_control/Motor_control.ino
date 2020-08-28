@@ -177,8 +177,8 @@ void loop() {
   Serial.print(encoder_count_R);
   Serial.println();
 
-  // makes it run at about 20 Hz
-  int delayTime = 50000 - (currentMicros - previouMicros); 
+  // makes it run at about 30 Hz
+  int delayTime = 33333 - (currentMicros - previouMicros); 
   if (delayTime > 0){
     delayMicroseconds(delayTime);
     }
