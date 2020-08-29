@@ -12,7 +12,7 @@
 #include <mutex>
 #include <math.h>
 #include <random>
-#include <iostream> // for cout
+#include <iostream> 
 #include <chrono>  // for timer
 
 #include "Variables.h"
