@@ -19,11 +19,16 @@
 #include "Helper_functions.h" 
 
 
-
 class Slam{
   private:
+    // class global variables
+    Odometry odometry;
+    Robot_intrinsics robot_intrinsics;
+
     void callback(const sensor_msgs::Image::ConstPtr& image_data, const neon::Encoder_count::ConstPtr& encoder_data){
       // Solve all of perception here...
+      update_odometry(&odometry, &robot_intrinsics, encoder_data->left, encoder_data->right);
+
     }
 
   public:
