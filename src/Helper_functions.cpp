@@ -140,10 +140,31 @@ void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff
                 local_map->map[index_after_conv] = 50;
             }
         }
-        
-    }
 
-    //ray cast
+
+        //ray cast
+        int ray_iteration = round((norm_*local_map->map_conv));
+        double ray_dx = (depth_data->cloudpoints_rot_t[i][0] - local_map->pos_x)/(norm_*local_map->map_conv);
+        double ray_dy = (depth_data->cloudpoints_rot_t[i][1] - local_map->pos_y)/(norm_*local_map->map_conv);
+        for (int j = 1; j < ray_iteration; j++){
+
+            indx[0] = round((local_map->pos_x + ray_dx*j) * local_map->map_conv);
+            indx[1] = round((local_map->pos_y + ray_dy*j) * local_map->map_conv);
+            index_after_conv = index_conversion(indx[0], indx[1], local_map);
+            if (index_after_conv < 0 || index_after_conv >= local_map->map_elements){
+                continue;
+            }
+            else{
+                // index to map
+                local_map->map[index_after_conv] += -3;
+
+                // clip map. 
+                if(local_map->map[index_after_conv] < -50){
+                    local_map->map[index_after_conv] = -50;
+                }
+            }
+        } 
+    }
 
 }
 
