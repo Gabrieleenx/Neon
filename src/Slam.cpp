@@ -1,9 +1,10 @@
 #include "ros/ros.h"
 
 #include "std_msgs/String.h"
+/*
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/sync_policies/approximate_time.h>*/
 #include <sensor_msgs/Image.h>
 #include <neon/Encoder_count.h>
 
@@ -14,42 +15,58 @@
 #include <random>
 #include <iostream> 
 #include <chrono>  // for timer
+#include <vector>
 
 #include "Variables.h"
 #include "Helper_functions.h" 
 
-// Timestamps not synced between ros on nano and camera..
+// mutex for when copying data from local map to particles 
+std::mutex mtx_odometry;
 
 class Slam{
   private:
+    
     // class global variables
     Odometry odometry;
+    Odometry odometry_previous;
+    Orientation_diff orientation_diff;
+    Camera_intrinsics camera_intrinsics;
     Robot_intrinsics robot_intrinsics;
-    //ros::Subscriber depth_sub;
+    Depth_data depth_data{camera_intrinsics.res_h};
+    Local_map local_map;
+    ros::Subscriber depth_sub;
     ros::Subscriber encoder_sub;
-    //, const sensor_msgs::Image::ConstPtr& image_data, 
-    void callback(const neon::Encoder_count::ConstPtr& encoder_data){
-      // Solve all of perception here...
-      std::cout << "calllback Left encoder" << encoder_data->left << " Right encoder " << encoder_data->right << std::endl;
+
+    void callback(const sensor_msgs::Image::ConstPtr& image_data){
+
+      mtx_odometry.lock();
+      update_orientation_diff(&orientation_diff, &odometry, &odometry_previous);
+      odometry_previous = odometry;
+      mtx_odometry.unlock();
+      
+      update_depth_data(&depth_data, &camera_intrinsics, image_data->data);
+
+      update_local_map(&depth_data, &orientation_diff, &local_map);
+      
+    }
+
+    void callback_odometry(const neon::Encoder_count::ConstPtr& encoder_data){
+
+      mtx_odometry.lock();
       update_odometry(&odometry, &robot_intrinsics, encoder_data->left, encoder_data->right);
-      std::cout << "Left pos " << odometry.pos_x << " Right pos " << odometry.pos_y << " Rotation " << odometry.rot << std::endl; 
+      mtx_odometry.unlock();
+
     }
 
   public:
+     // class global variables
     Slam(ros::NodeHandle *nh){
 
-    //depth_sub = nh->subscribe("/camera/depth/image_rect_raw", 2, &Slam::callback, this);
-    encoder_sub = nh->subscribe("/encoder_count", 2, &Slam::callback, this);
+      initilize_horizondal_distance_vector(&camera_intrinsics);
 
-    /*
-    message_filters::Subscriber<sensor_msgs::Image> image_sub(*nh, "/camera/depth/image_rect_raw", 1);
-    message_filters::Subscriber<neon::Encoder_count> encoder_count_sub(*nh, "/encoder_count", 1);
-    std::cout << "hello" << std::endl;
-    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, neon::Encoder_count> MySyncPolicy;
-    // ApproximateTime takes a queue size as its constructor argument, hence MySyncPolicy(10)
-    message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(20), image_sub, encoder_count_sub);
-    sync.registerCallback(boost::bind(&Slam::callback, this, _1, _2));
-    */
+      depth_sub = nh->subscribe("/camera/depth/image_rect_raw", 2, &Slam::callback, this);
+      encoder_sub = nh->subscribe("/encoder_count", 2, &Slam::callback_odometry, this);
+
     }
 
 };
