@@ -22,6 +22,7 @@
 
 // mutex for when copying data from local map to particles 
 std::mutex mtx_odometry;
+std::mutex mtx_local_map;
 
 class Slam{
   private:
@@ -34,6 +35,9 @@ class Slam{
     Robot_intrinsics robot_intrinsics;
     Depth_data depth_data{camera_intrinsics.res_h};
     Local_map local_map;
+    Local_map local_map_copy;
+    const static int num_particles = 50; 
+    Particle* particles = new Particle[num_particles];
     ros::Subscriber depth_sub;
     ros::Subscriber encoder_sub;
 
@@ -46,7 +50,11 @@ class Slam{
       
       update_depth_data(&depth_data, &camera_intrinsics, image_data->data);
 
+      mtx_local_map.lock();
       update_local_map(&depth_data, &orientation_diff, &local_map);
+      mtx_local_map.unlock();
+
+      local_map_updated = 1;
       
     }
 
@@ -59,7 +67,10 @@ class Slam{
     }
 
   public:
-     // class global variables
+    // class global variables
+    
+    int local_map_updated = 0;
+
     Slam(ros::NodeHandle *nh){
 
       initilize_horizondal_distance_vector(&camera_intrinsics);
@@ -67,8 +78,29 @@ class Slam{
       depth_sub = nh->subscribe("/camera/depth/image_rect_raw", 2, &Slam::callback, this);
       encoder_sub = nh->subscribe("/encoder_count", 2, &Slam::callback_odometry, this);
 
+      normalize_weights(particles, num_particles);
+
     }
 
+    void particle_filter_update(){
+
+      mtx_local_map.lock();
+      local_map_copy = local_map;
+      reset_local_map(&local_map);
+      mtx_local_map.unlock();
+
+      std::random_device rd; // create random random seed
+      std::mt19937 gen(rd()); // put the seed inte the random generator 
+      std::normal_distribution<float> pos_d(0, 0.03); // create a distrobution
+      std::normal_distribution<float> rot_d(0, 0.02); // create a distrobution
+
+
+
+    }
+
+    void delete_memory(){
+      delete[] particles;
+    }
 };
 
 
@@ -84,6 +116,20 @@ int main(int argc, char** argv){
   spinner.start();
 
   Slam slam(&nh);
+
+  ros::Rate loop_rate(0.5);
+
+    uint32_t seq = 1;
+
+    while (ros::ok()){
+        //publish_cloud_points(slam, publish_point_cloud, seq);
+        //ros::spinOnce();
+        if(slam.local_map_updated == 1){
+            slam.particle_filter_update();
+        }
+        loop_rate.sleep();
+        ++seq;
+    }
 
   ros::waitForShutdown();
 

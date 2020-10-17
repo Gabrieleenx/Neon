@@ -63,9 +63,32 @@ struct Local_map
     double map_conv = 1/resoulution;
     const static int size_m = 10;
     const static int grid_size = size_m/resoulution;
+    constexpr static double start_pos_x = 5;
+    constexpr static double start_pos_y = 5;
     int8_t map[grid_size*grid_size] = {0};
-    double pos_x = 0;
-    double pos_y = 0;
+    double pos_x = 5;
+    double pos_y = 5;
     double rot = 0;
     int map_elements = grid_size*grid_size;
+};
+
+struct Particle
+{
+    constexpr static double resoulution = 0.05;
+    const static int map_size_x = 15;
+    const static int map_size_y = 15;
+    const static int map_num_grid_x = map_size_x/resoulution; 
+    const static int map_num_grid_y = map_size_y/resoulution; 
+    const static int map_num_elements = map_num_grid_x * map_num_grid_y;
+    double pos_x = 7.5;
+    double pos_y = 7.5;
+    double rot_z = 0.0;
+    double weight = 1.0/50; 
+    uint8_t map[map_num_elements] =  {0};
+    Particle(){
+        for (int i = 0; i < map_num_elements; i++){
+            map[i] = 50;
+        }
+    }
+
 };

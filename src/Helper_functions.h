@@ -10,3 +10,7 @@ void initilize_horizondal_distance_vector(Camera_intrinsics* c_i);
 void update_depth_data(Depth_data* depth_data, Camera_intrinsics* camera_intrinsics, const std::vector<uint8_t> &image);
 
 void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff, Local_map* local_map);
+
+void normalize_weights(Particle* particles, int num_particles);
+
+void reset_local_map(Local_map* local_map);

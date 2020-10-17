@@ -105,6 +105,7 @@ int index_conversion(int x, int y, Local_map* local_map){
 void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff, Local_map* local_map){
     int indx[2];
     int index_after_conv;
+    float max_visibility = 3;
     local_map->pos_x += orientation_diff->pos_x;
     local_map->pos_y += orientation_diff->pos_y;
     local_map->rot += orientation_diff->rot;
@@ -114,12 +115,12 @@ void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff
 
     // Translate points
     Translate_points(depth_data->cloudpoints_rot_t, depth_data->cloudpoints_rot_t, depth_data->cloudpoints_idx
-                        , (local_map->pos_x + local_map->size_m/2), (local_map->pos_y + local_map->size_m/2));
+                        , (local_map->pos_x), (local_map->pos_y));
 
     for(int i = 0; i < depth_data->cloudpoints_idx; i++){
         double norm_ = norm(depth_data->cloudpoints[i][0], 0.0, depth_data->cloudpoints[i][1], 0.0);
         
-        if(norm_ > 3){
+        if(norm_ > max_visibility){
             continue;
         }
 
@@ -143,13 +144,13 @@ void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff
 
 
         //ray cast
-        int ray_iteration = round((norm_*local_map->map_conv));
-        double ray_dx = (depth_data->cloudpoints_rot_t[i][0] - local_map->pos_x)/(norm_*local_map->map_conv);
-        double ray_dy = (depth_data->cloudpoints_rot_t[i][1] - local_map->pos_y)/(norm_*local_map->map_conv);
+        int ray_iteration = round((norm_*(local_map->map_conv)));
+        double ray_dx = (depth_data->cloudpoints_rot_t[i][0] - local_map->pos_x)/(norm_*(local_map->map_conv));
+        double ray_dy = (depth_data->cloudpoints_rot_t[i][1] - local_map->pos_y)/(norm_*(local_map->map_conv));
         for (int j = 1; j < ray_iteration; j++){
 
-            indx[0] = round((local_map->pos_x + ray_dx*j) * local_map->map_conv);
-            indx[1] = round((local_map->pos_y + ray_dy*j) * local_map->map_conv);
+            indx[0] = round((local_map->pos_x + ray_dx*j) * (local_map->map_conv));
+            indx[1] = round((local_map->pos_y + ray_dy*j) * (local_map->map_conv));
             index_after_conv = index_conversion(indx[0], indx[1], local_map);
             if (index_after_conv < 0 || index_after_conv >= local_map->map_elements){
                 continue;
@@ -169,9 +170,25 @@ void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff
 }
 
 
+void normalize_weights(Particle* particles, int num_particles){
+    float sum_weight = 0;
+    for (int i = 0; i < num_particles; i++){
+        sum_weight += particles[i].weight;
+    }
 
+    for (int i = 0; i < num_particles; i++){
+        particles[i].weight = particles[i].weight / sum_weight;
+    }
+}
 
-
+void reset_local_map(Local_map* local_map){
+    local_map->pos_x = local_map->start_pos_x;
+    local_map->pos_y = local_map->start_pos_y;
+    local_map->rot = 0;
+    for(int i = 0; i < local_map->map_elements; i++){
+        local_map->map[i] = 0;
+    }   
+}
 
 
 
