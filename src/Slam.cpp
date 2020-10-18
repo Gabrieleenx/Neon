@@ -93,7 +93,10 @@ class Slam{
       std::mt19937 gen(rd()); // put the seed inte the random generator 
       std::normal_distribution<float> pos_d(0, 0.03); // create a distrobution
       std::normal_distribution<float> rot_d(0, 0.02); // create a distrobution
+      for (int i = 0; i < num_particles; i++){
 
+        
+      }
 
 
     }

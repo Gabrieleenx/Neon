@@ -14,3 +14,5 @@ void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff
 void normalize_weights(Particle* particles, int num_particles);
 
 void reset_local_map(Local_map* local_map);
+
+void rotation_matrix(double matrix[2][2], double z);

@@ -74,12 +74,17 @@ void update_depth_data(Depth_data* depth_data, Camera_intrinsics* camera_intrins
 
 }
 
+void rotation_matrix(double matrix[2][2], double z){
+    matrix[0][0] = cos(z);
+    matrix[0][1] = -sin(z);
+    matrix[1][0] = sin(z);
+    matrix[1][1] = cos(z);
+}
+
+
 void rotate_points(double new_point[][2], double point[][2], int num_points, double z){
     double Rot_M[2][2];
-    Rot_M[0][0] = cos(z);
-    Rot_M[0][1] = -sin(z);
-    Rot_M[1][0] = sin(z);
-    Rot_M[1][1] = cos(z);
+    rotation_matrix(Rot_M, z);
 
     for(int i = 0; i < num_points; i++){
         new_point[i][0] = Rot_M[0][0] * point[i][0] + Rot_M[0][1] * point[i][1];
@@ -190,11 +195,33 @@ void reset_local_map(Local_map* local_map){
     }   
 }
 
+void updatate_particle_map(Particle* particle, Local_map* local_map){
+    int local_map_index[2];
+    int particle_map_index[2];
+    int local_map_start_index_x = (local_map->start_pos_x)*(local_map->resoulution);
+    int local_map_start_index_y = (local_map->start_pos_y)*(local_map->resoulution);
+    double rotated_index[2];
+    double Rot_M[2][2];
+    rotation_matrix(Rot_M, particle->rot_z);
 
 
-
-
-
+    for (int i = 0; i < local_map->map_elements; i++){
+        if (local_map->map[i] == 0){
+            continue;
+        }
+        // get x and y index
+        local_map_index[0] = i/(local_map->grid_size);
+        local_map_index[1] = i - local_map_index[0]*(local_map->grid_size);
+        // subtact starting position 
+        local_map_index[0] += -local_map_start_index_x;
+        local_map_index[1] += -local_map_start_index_y;
+        // rotate index
+        rotated_index[0] = Rot_M[0][0] * local_map_index[0] + Rot_M[0][1] * local_map_index[1];
+        rotated_index[0] = Rot_M[1][0] * local_map_index[0] + Rot_M[1][1] * local_map_index[1];
+        // particle map index 
+        
+    }
+}
 
 
 
