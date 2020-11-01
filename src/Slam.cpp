@@ -94,11 +94,36 @@ class Slam{
       std::normal_distribution<float> pos_d(0, 0.03); // create a distrobution
       std::normal_distribution<float> rot_d(0, 0.02); // create a distrobution
       for (int i = 0; i < num_particles; i++){
+        // update map
+        updatate_particle_map(&particles[i], &local_map_copy);
+        // update position
+        particles[i].pos_x +=  cos(particles[i].rot_z)*(local_map_copy.pos_x - local_map_copy.start_pos_x) - 
+          sin(particles[i].rot_z)*(local_map_copy.pos_y - local_map_copy.start_pos_y) + pos_d(gen); 
+      
+        particles[i].pos_y +=  cos(particles[i].rot_z)*(local_map_copy.pos_y - local_map_copy.start_pos_y) + 
+          sin(particles[i].rot_z)*(local_map_copy.pos_x - local_map_copy.start_pos_x) + pos_d(gen); 
 
-        
+        particles[i].rot_z += local_map_copy.rot + rot_d(gen);
       }
 
+      // update weights
+      int smallest_score = 100000000;
+      for (int i = 0; i < num_particles; i++){
+        if (smallest_score > particles[i].scan_score){
+          smallest_score = particles[i].scan_score;
+        }
+      }
+      for (int i = 0; i < num_particles; i++){
+        particles[i].weight = particles[i].weight * (particles[i].scan_score - 0.99*smallest_score)*
+          (particles[i].scan_score - 0.99*smallest_score) / particles[i].num_scan_checs;
+      }
+      // normalize weights
+      normalize_weights(particles, num_particles);
+      // resample
 
+      // moved? add to map
+
+      // best position
     }
 
     void delete_memory(){

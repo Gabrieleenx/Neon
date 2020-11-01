@@ -197,14 +197,17 @@ void reset_local_map(Local_map* local_map){
 
 void updatate_particle_map(Particle* particle, Local_map* local_map){
     int local_map_index[2];
-    int particle_map_index[2];
+    int particle_map_index;
     int local_map_start_index_x = (local_map->start_pos_x)*(local_map->resoulution);
     int local_map_start_index_y = (local_map->start_pos_y)*(local_map->resoulution);
+    int Tx;
+    int Ty;
     double rotated_index[2];
     double Rot_M[2][2];
+    particle->scan_score = 0;
+    particle->num_scan_checs = 0;
     rotation_matrix(Rot_M, particle->rot_z);
-
-
+    int new_value;
     for (int i = 0; i < local_map->map_elements; i++){
         if (local_map->map[i] == 0){
             continue;
@@ -217,10 +220,44 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         local_map_index[1] += -local_map_start_index_y;
         // rotate index
         rotated_index[0] = Rot_M[0][0] * local_map_index[0] + Rot_M[0][1] * local_map_index[1];
-        rotated_index[0] = Rot_M[1][0] * local_map_index[0] + Rot_M[1][1] * local_map_index[1];
+        rotated_index[1] = Rot_M[1][0] * local_map_index[0] + Rot_M[1][1] * local_map_index[1];
         // particle map index 
+        Tx = particle->pos_x / particle->resoulution;
+        Ty = particle->pos_y / particle->resoulution;
+        particle_map_index = (local_map_index[0] + Tx)*(particle->map_num_grid_x) + local_map_index[1] + Ty;
+        // check if inside map
+        if(particle_map_index < 0 || particle_map_index > particle->map_num_elements){
+            continue;
+        }
+
+        // for obstructed space
+        if (local_map->map[i] > 20){
+            particle->scan_score += particle->map[particle_map_index] - particle->initial_value;
+            particle->num_scan_checs += 1;
+        }
+        // for unobstucted space, not sure if this one helps or makes it worse
+        else if (local_map->map[i] < -35)
+        {
+            particle->scan_score += -(particle->map[particle_map_index] - particle->initial_value);
+            particle->num_scan_checs += 1;
+        }
         
+        // add to map 
+        if (particle->add_points == 0){
+            continue;
+        }
+        new_value = particle->map[particle_map_index] + local_map->map[i];
+        if (new_value < 0){
+            particle->map[particle_map_index] = 0;
+        }
+        else if (new_value > 100){
+            particle->map[particle_map_index] = 100;
+        }
+        else{
+            particle->map[particle_map_index] = new_value;
+        }
     }
+
 }
 
 

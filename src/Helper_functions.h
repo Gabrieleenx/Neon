@@ -16,3 +16,5 @@ void normalize_weights(Particle* particles, int num_particles);
 void reset_local_map(Local_map* local_map);
 
 void rotation_matrix(double matrix[2][2], double z);
+
+void updatate_particle_map(Particle* particle, Local_map* local_map);

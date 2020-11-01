@@ -77,6 +77,7 @@ struct Particle
     constexpr static double resoulution = 0.05;
     const static int map_size_x = 15;
     const static int map_size_y = 15;
+    const static int initial_value = 50;
     const static int map_num_grid_x = map_size_x/resoulution; 
     const static int map_num_grid_y = map_size_y/resoulution; 
     const static int map_num_elements = map_num_grid_x * map_num_grid_y;
@@ -84,6 +85,9 @@ struct Particle
     double pos_y = 7.5;
     double rot_z = 0.0;
     double weight = 1.0/50; 
+    int scan_score = 0;
+    int num_scan_checs = 0;
+    int add_points = 1;
     uint8_t map[map_num_elements] =  {0};
     Particle(){
         for (int i = 0; i < map_num_elements; i++){
