@@ -18,3 +18,7 @@ void reset_local_map(Local_map* local_map);
 void rotation_matrix(double matrix[2][2], double z);
 
 void updatate_particle_map(Particle* particle, Local_map* local_map);
+
+void resample(Particle* particles, int num_particles, int* best_particle_idx);
+
+void reverse_index_conversion(int index_out[3], Particle* particle, int index_in);

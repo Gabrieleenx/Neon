@@ -40,6 +40,9 @@ class Slam{
     Particle* particles = new Particle[num_particles];
     ros::Subscriber depth_sub;
     ros::Subscriber encoder_sub;
+    ros::Publisher publish_map;
+
+    int best_particle_idx = 0;
 
     void callback(const sensor_msgs::Image::ConstPtr& image_data){
 
@@ -77,7 +80,7 @@ class Slam{
 
       depth_sub = nh->subscribe("/camera/depth/image_rect_raw", 2, &Slam::callback, this);
       encoder_sub = nh->subscribe("/encoder_count", 2, &Slam::callback_odometry, this);
-
+      publish_map = nh->advertise<sensor_msgs::PointCloud>("/PointCloud", 1);
       normalize_weights(particles, num_particles);
 
     }
@@ -120,15 +123,46 @@ class Slam{
       // normalize weights
       normalize_weights(particles, num_particles);
       // resample
+      resample(particles, num_particles, &best_particle_idx)
 
       // moved? add to map
 
       // best position
+
     }
 
-    void delete_memory(){
-      delete[] particles;
+    void publish_cloud_points(uint32_t seq){
+      // creates pointcloud message and publish it. 
+      
+      //particle_map();
+      sensor_msgs::PointCloud msg;
+      msg.header.frame_id = "/map";
+      msg.header.stamp = ros::Time::now();
+      msg.header.seq = seq;
+
+      geometry_msgs::Point32 point32;
+
+      std::cout << "publish map " << std::endl;
+      
+      // PUBLISH MAP
+      for(int i = 0; i < particles[0].map_num_elements; i+=4){
+          
+        if (particles[*best_particle_idx].map[i] > 80){
+            int index_map_pub[3];
+            reverse_index_conversion(index_map_pub, particles[0], i);
+            point32.x = index_map_pub[0]*particles[0].resolution;
+            point32.y = -index_map_pub[1]*particles[0].resolution;
+            point32.z = 0;
+            msg.points.push_back(point32);
+        }     
+      }
+      publish_map.publish(msg);
+      
     }
+
+  void delete_memory(){
+    delete[] particles;
+  }
 };
 
 
@@ -150,8 +184,8 @@ int main(int argc, char** argv){
     uint32_t seq = 1;
 
     while (ros::ok()){
-        //publish_cloud_points(slam, publish_point_cloud, seq);
-        //ros::spinOnce();
+        slam.publish_cloud_points(seq);
+        ros::spinOnce();
         if(slam.local_map_updated == 1){
             slam.particle_filter_update();
         }

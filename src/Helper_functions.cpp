@@ -3,6 +3,7 @@
 #include <cmath>
 #include <iostream> 
 #include <vector>
+#include <random>
 
 void update_odometry(Odometry* odometry, Robot_intrinsics* robot_intrinsics, int count_left, int count_right){
     
@@ -105,6 +106,15 @@ double norm(double x1, double x2, double y1, double y2){
 
 int index_conversion(int x, int y, Local_map* local_map){
     return x*(local_map->grid_size) + y;
+}
+
+void reverse_index_conversion(int index_out[3], Particle* particle, int index_in){
+    int x;
+    int y;
+    x = index_in/(particle->map_num_grid_x);
+    y = index_in-x*(particle->map_num_grid_x);
+    index_out[0] = x;
+    index_out[1] = y;
 }
 
 void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff, Local_map* local_map){
@@ -224,7 +234,9 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         // particle map index 
         Tx = particle->pos_x / particle->resoulution;
         Ty = particle->pos_y / particle->resoulution;
-        particle_map_index = (local_map_index[0] + Tx)*(particle->map_num_grid_x) + local_map_index[1] + Ty;
+        //particle_map_index = (local_map_index[0] + Tx)*(particle->map_num_grid_x) + local_map_index[1] + Ty;
+        particle_map_index = (rotated_index[0] + Tx)*(particle->map_num_grid_x) + rotated_index[1] + Ty;
+        
         // check if inside map
         if(particle_map_index < 0 || particle_map_index > particle->map_num_elements){
             continue;
@@ -261,6 +273,69 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
 }
 
 
+void resample(Particle* particles, int num_particles, int* best_particle_idx){
+
+    double resample_list[num_particles+1];
+    int resample_index[num_particles];
+    double sum_ = 0;
+    resample_list[0] = 0;
+    for(int i = 0; i < num_particles; i++){
+        sum_ += particles[i].weight;
+        resample_list[i+1] = sum_;
+    }
+
+    std::random_device rd; // create random random seed
+    std::mt19937 gen(rd()); // put the seed in the random generator 
+    std::uniform_real_distribution<double> distr(0.0, 1.0); // create a distrobution
+
+    for(int i = 0; i < num_particles; i++){
+        double rand_val = distr(gen);
+        for (int j = 1; j < num_particles+1; j++){
+            if(rand_val > resample_list[j-1] && rand_val < resample_list[j]){
+                resample_index[i] = j-1;
+                break;
+            }
+        }
+    }
+    // organize to minimize copying data.
+    int resample_index_org[num_particles] = { 1 };
+    int resample_index_taken[num_particles] = { 0 };
+    for (int i = 0; i < num_particles; i++){
+        resample_index_taken[resample_index[i]] = 1;
+        resample_index_org[resample_index[i]] = resample_index[i];
+    }
+    for (int i = 0; i < num_particles; i++){
+        if(resample_index[i] == resample_index_org[resample_index[i]]){
+            for(int j = 0; j < num_particles; j++){
+                if (resample_index_taken[j] == 0){
+                    resample_index_org[j] = resample_index[i];
+                    resample_index_taken[j] = 1;
+                    break;
+                }
+            }
+        }
+        
+    }
+
+    // copy data
+    for(int i = 0; i < num_particles; i++){
+        if (resample_index_org[i] == i){
+            continue;
+        }
+        else{
+            particles[i] = particles[resample_index_org[i]];
+        }
+    }
+
+    // save index with higest weight 
+    double last_high_weight = 0;
+    for(int i = 0; i < num_particles; i++){
+        if (particles[i].weight > last_high_weight){
+            *best_particle_idx = i;
+            last_high_weight = particles[i].weight;
+        }
+    }
+}
 
 
 
