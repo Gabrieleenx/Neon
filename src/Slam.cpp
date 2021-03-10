@@ -6,6 +6,8 @@
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>*/
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/PointCloud.h>
+
 #include <neon/Encoder_count.h>
 
 #include <signal.h>
@@ -123,7 +125,7 @@ class Slam{
       // normalize weights
       normalize_weights(particles, num_particles);
       // resample
-      resample(particles, num_particles, &best_particle_idx)
+      resample(particles, num_particles, &best_particle_idx);
 
       // moved? add to map
 
@@ -136,7 +138,7 @@ class Slam{
       
       //particle_map();
       sensor_msgs::PointCloud msg;
-      msg.header.frame_id = "/map";
+      msg.header.frame_id = "/camera_link";
       msg.header.stamp = ros::Time::now();
       msg.header.seq = seq;
 
@@ -147,9 +149,9 @@ class Slam{
       // PUBLISH MAP
       for(int i = 0; i < particles[0].map_num_elements; i+=4){
           
-        if (particles[*best_particle_idx].map[i] > 80){
+        if (particles[best_particle_idx].map[i] > 80){
             int index_map_pub[3];
-            reverse_index_conversion(index_map_pub, particles[0], i);
+            reverse_index_conversion(index_map_pub, &particles[0], i);
             point32.x = index_map_pub[0]*particles[0].resolution;
             point32.y = -index_map_pub[1]*particles[0].resolution;
             point32.z = 0;

@@ -74,12 +74,12 @@ struct Local_map
 
 struct Particle
 {
-    constexpr static double resoulution = 0.05;
+    constexpr static double resolution = 0.05;
     const static int map_size_x = 15;
     const static int map_size_y = 15;
     const static int initial_value = 50;
-    const static int map_num_grid_x = map_size_x/resoulution; 
-    const static int map_num_grid_y = map_size_y/resoulution; 
+    const static int map_num_grid_x = map_size_x/resolution; 
+    const static int map_num_grid_y = map_size_y/resolution; 
     const static int map_num_elements = map_num_grid_x * map_num_grid_y;
     double pos_x = 7.5;
     double pos_y = 7.5;

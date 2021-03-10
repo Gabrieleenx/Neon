@@ -232,8 +232,8 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         rotated_index[0] = Rot_M[0][0] * local_map_index[0] + Rot_M[0][1] * local_map_index[1];
         rotated_index[1] = Rot_M[1][0] * local_map_index[0] + Rot_M[1][1] * local_map_index[1];
         // particle map index 
-        Tx = particle->pos_x / particle->resoulution;
-        Ty = particle->pos_y / particle->resoulution;
+        Tx = particle->pos_x / particle->resolution;
+        Ty = particle->pos_y / particle->resolution;
         //particle_map_index = (local_map_index[0] + Tx)*(particle->map_num_grid_x) + local_map_index[1] + Ty;
         particle_map_index = (rotated_index[0] + Tx)*(particle->map_num_grid_x) + rotated_index[1] + Ty;
         
