@@ -7,7 +7,7 @@
 #include <message_filters/sync_policies/approximate_time.h>*/
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/PointCloud.h>
-
+#include <nav_msgs/OccupancyGrid.h>
 #include <neon/Encoder_count.h>
 
 #include <signal.h>
@@ -82,7 +82,8 @@ class Slam{
 
       depth_sub = nh->subscribe("/camera/depth/image_rect_raw", 2, &Slam::callback, this);
       encoder_sub = nh->subscribe("/encoder_count", 2, &Slam::callback_odometry, this);
-      publish_map = nh->advertise<sensor_msgs::PointCloud>("/PointCloud", 1);
+      //publish_map = nh->advertise<sensor_msgs::PointCloud>("/PointCloud", 1);
+      publish_map = nh->advertise<nav_msgs::OccupancyGrid>("/OccupancyGrid", 1);
       normalize_weights(particles, num_particles);
 
     }
@@ -137,15 +138,39 @@ class Slam{
       // creates pointcloud message and publish it. 
       
       //particle_map();
-      sensor_msgs::PointCloud msg;
+      //sensor_msgs::PointCloud msg;
+      //msg.header.frame_id = "/camera_link";
+      //msg.header.stamp = ros::Time::now();
+      //msg.header.seq = seq;
+      nav_msgs::OccupancyGrid msg;
       msg.header.frame_id = "/camera_link";
       msg.header.stamp = ros::Time::now();
       msg.header.seq = seq;
+      msg.info.map_load_time = ros::Time::now();
+      msg.info.resolution = particles[best_particle_idx].resolution;
+      msg.info.width = particles[best_particle_idx].map_num_grid_x;
+      msg.info.height = particles[best_particle_idx].map_num_grid_y;
+      msg.info.origin.position.x = 7.5;
+      msg.info.origin.position.y = 7.5; 
+      msg.info.origin.position.z = 0.0;
 
-      geometry_msgs::Point32 point32;
+      msg.info.origin.orientation.x = 0;
+      msg.info.origin.orientation.y = 0;
+      msg.info.origin.orientation.z = 0;
+      msg.info.origin.orientation.w = 1;
+      std::vector<int8_t> mapMsg;
+      mapMsg.resize(90000);
+      for (int i = 0; i < mapMsg.size() ; i++){
+        mapMsg[i] = particles[best_particle_idx].map[i];
+      }
 
+      msg.data = mapMsg;
+      //geometry_msgs::Point32 point32;
+
+      publish_map.publish(msg);
       std::cout << "publish map " << std::endl;
-      
+
+      /*  
       // PUBLISH MAP
        
       for(int i = 0; i < particles[best_particle_idx].map_num_elements; i++){
@@ -160,35 +185,10 @@ class Slam{
             msg.points.push_back(point32);
         }     
       }
-      /*
-      for(int i = 0; i < local_map_copy.map_elements; i+=1){
-        
-        if (local_map_copy.map[i] > 1){
-
-            int x;
-            int y;
-            x = i/(particles[best_particle_idx].map_num_grid_x);
-            y = i-x*(particles[best_particle_idx].map_num_grid_y);
-            std::cout << "whalla x " << x*particles[best_particle_idx].resolution <<  " whalla y " << y*particles[best_particle_idx].resolution << " i " << i << std::endl; 
-            point32.x = x*particles[best_particle_idx].resolution;
-            point32.y = -y*particles[best_particle_idx].resolution;
-            point32.z = 0;
-            msg.points.push_back(point32);
-        }     
-      }
-      */
-     /*
-      for(int i = 0; i < depth_data.res; i+=1){
-      
-        point32.x = depth_data.cloudpoints[i][0];
-        point32.y = depth_data.cloudpoints[i][1];
-        point32.z = 0;
-        msg.points.push_back(point32);
-             
-      }
-      */
+      /
       publish_map.publish(msg);
-      
+      */
+
     }
 
   void delete_memory(){
