@@ -29,14 +29,14 @@ struct Robot_intrinsics
 
 struct Camera_intrinsics
 {
-    const static int res_h = 640;
+    const static int res_h = 848;
     const static int res_v = 480;
     int horizon_px = 240;
 
     const static int horizontal_down_sampling_factor = 1;
     const static int vertical_mean_factor = 8;
 
-    double focal_point = 385.0/horizontal_down_sampling_factor;
+    double focal_point = 425.5148010253906/horizontal_down_sampling_factor;
     double horizontal_distance[res_h];
  
 };
@@ -49,7 +49,7 @@ struct Depth_data
     Depth_data(int res_){
          const static int res = res_/horizontal_down_sampling_factor;
     }
-    const static int res = 640/horizontal_down_sampling_factor;
+    const static int res = 848/horizontal_down_sampling_factor;
     int depth_y[res];
     int depth_x[res];
     double cloudpoints[res][2];

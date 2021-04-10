@@ -38,7 +38,7 @@ class Slam{
     Depth_data depth_data{camera_intrinsics.res_h};
     Local_map local_map;
     Local_map local_map_copy;
-    const static int num_particles = 50; 
+    const static int num_particles = 250; 
     Particle* particles = new Particle[num_particles];
     ros::Subscriber depth_sub;
     ros::Subscriber encoder_sub;
@@ -120,7 +120,7 @@ class Slam{
       }
       for (int i = 0; i < num_particles; i++){
         particles[i].weight = particles[i].weight * (particles[i].scan_score - 0.99*smallest_score)*
-          (particles[i].scan_score - 0.99*smallest_score) / particles[i].num_scan_checs;
+          (particles[i].scan_score - 0.99*smallest_score) / particles[i].num_scan_checs + 0.0000001;
       }
       // normalize weights
       normalize_weights(particles, num_particles);
@@ -128,7 +128,7 @@ class Slam{
       resample(particles, num_particles, &best_particle_idx);
 
       // moved? add to map
-
+      std::cout << "Position x " <<particles[best_particle_idx].pos_x << " Position y " <<particles[best_particle_idx].pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
       // best position
 
     }
@@ -147,17 +147,46 @@ class Slam{
       std::cout << "publish map " << std::endl;
       
       // PUBLISH MAP
-      for(int i = 0; i < particles[0].map_num_elements; i+=4){
-          
+       
+      for(int i = 0; i < particles[best_particle_idx].map_num_elements; i++){
+       
         if (particles[best_particle_idx].map[i] > 80){
             int index_map_pub[3];
-            reverse_index_conversion(index_map_pub, &particles[0], i);
-            point32.x = index_map_pub[0]*particles[0].resolution;
-            point32.y = -index_map_pub[1]*particles[0].resolution;
+            reverse_index_conversion(index_map_pub, &particles[best_particle_idx], i);
+
+            point32.x = index_map_pub[0]*particles[best_particle_idx].resolution;
+            point32.y = -index_map_pub[1]*particles[best_particle_idx].resolution;
             point32.z = 0;
             msg.points.push_back(point32);
         }     
       }
+      /*
+      for(int i = 0; i < local_map_copy.map_elements; i+=1){
+        
+        if (local_map_copy.map[i] > 1){
+
+            int x;
+            int y;
+            x = i/(particles[best_particle_idx].map_num_grid_x);
+            y = i-x*(particles[best_particle_idx].map_num_grid_y);
+            std::cout << "whalla x " << x*particles[best_particle_idx].resolution <<  " whalla y " << y*particles[best_particle_idx].resolution << " i " << i << std::endl; 
+            point32.x = x*particles[best_particle_idx].resolution;
+            point32.y = -y*particles[best_particle_idx].resolution;
+            point32.z = 0;
+            msg.points.push_back(point32);
+        }     
+      }
+      */
+     /*
+      for(int i = 0; i < depth_data.res; i+=1){
+      
+        point32.x = depth_data.cloudpoints[i][0];
+        point32.y = depth_data.cloudpoints[i][1];
+        point32.z = 0;
+        msg.points.push_back(point32);
+             
+      }
+      */
       publish_map.publish(msg);
       
     }

@@ -190,7 +190,6 @@ void normalize_weights(Particle* particles, int num_particles){
     for (int i = 0; i < num_particles; i++){
         sum_weight += particles[i].weight;
     }
-
     for (int i = 0; i < num_particles; i++){
         particles[i].weight = particles[i].weight / sum_weight;
     }
@@ -208,8 +207,8 @@ void reset_local_map(Local_map* local_map){
 void updatate_particle_map(Particle* particle, Local_map* local_map){
     int local_map_index[2];
     int particle_map_index;
-    int local_map_start_index_x = (local_map->start_pos_x)*(local_map->resoulution);
-    int local_map_start_index_y = (local_map->start_pos_y)*(local_map->resoulution);
+    int local_map_start_index_x = (local_map->start_pos_x)*(local_map->map_conv);
+    int local_map_start_index_y = (local_map->start_pos_y)*(local_map->map_conv);
     int Tx;
     int Ty;
     double rotated_index[2];
@@ -231,12 +230,13 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         // rotate index
         rotated_index[0] = Rot_M[0][0] * local_map_index[0] + Rot_M[0][1] * local_map_index[1];
         rotated_index[1] = Rot_M[1][0] * local_map_index[0] + Rot_M[1][1] * local_map_index[1];
+
         // particle map index 
-        Tx = particle->pos_x / particle->resolution;
-        Ty = particle->pos_y / particle->resolution;
+        Tx = rotated_index[0] + particle->pos_x / particle->resolution;
+        Ty = rotated_index[1] + particle->pos_y / particle->resolution;
         //particle_map_index = (local_map_index[0] + Tx)*(particle->map_num_grid_x) + local_map_index[1] + Ty;
-        particle_map_index = (rotated_index[0] + Tx)*(particle->map_num_grid_x) + rotated_index[1] + Ty;
-        
+        particle_map_index = Tx*(particle->map_num_grid_y) + Ty;
+        //std::cout << "particle_map_index " << particle_map_index << std::endl;
         // check if inside map
         if(particle_map_index < 0 || particle_map_index > particle->map_num_elements){
             continue;
@@ -244,10 +244,12 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
 
         // for obstructed space
         if (local_map->map[i] > 20){
+    
             particle->scan_score += particle->map[particle_map_index] - particle->initial_value;
             particle->num_scan_checs += 1;
         }
         // for unobstucted space, not sure if this one helps or makes it worse
+        
         else if (local_map->map[i] < -35)
         {
             particle->scan_score += -(particle->map[particle_map_index] - particle->initial_value);
@@ -282,6 +284,7 @@ void resample(Particle* particles, int num_particles, int* best_particle_idx){
     for(int i = 0; i < num_particles; i++){
         sum_ += particles[i].weight;
         resample_list[i+1] = sum_;
+        //std::cout << "sum = " << sum_ << std::endl;
     }
 
     std::random_device rd; // create random random seed
@@ -335,6 +338,8 @@ void resample(Particle* particles, int num_particles, int* best_particle_idx){
             last_high_weight = particles[i].weight;
         }
     }
+
+    std::cout << " high = " << last_high_weight << " best index " <<  *best_particle_idx << std::endl;
 }
 
 
