@@ -9,6 +9,7 @@
 #include <sensor_msgs/PointCloud.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <neon/Encoder_count.h>
+#include <tf/transform_broadcaster.h>
 
 #include <signal.h>
 #include <thread>
@@ -43,7 +44,8 @@ class Slam{
     ros::Subscriber depth_sub;
     ros::Subscriber encoder_sub;
     ros::Publisher publish_map;
-
+    tf::TransformBroadcaster broadcaster;
+    tf::Quaternion quaternion;
     int best_particle_idx = 0;
 
     void callback(const sensor_msgs::Image::ConstPtr& image_data){
@@ -131,27 +133,27 @@ class Slam{
       // moved? add to map
       std::cout << "Position x " <<particles[best_particle_idx].pos_x << " Position y " <<particles[best_particle_idx].pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
       // best position
+      quaternion.setRPY(0,0, particles[best_particle_idx].rot_z);
+      broadcaster.sendTransform(
+        tf::StampedTransform(
+          tf::Transform(quaternion, tf::Vector3(particles[best_particle_idx].pos_x-7.5, particles[best_particle_idx].pos_y-7.5, 0)),
+          ros::Time::now(),"world", "robot"));
 
     }
 
     void publish_cloud_points(uint32_t seq){
       // creates pointcloud message and publish it. 
       
-      //particle_map();
-      //sensor_msgs::PointCloud msg;
-      //msg.header.frame_id = "/camera_link";
-      //msg.header.stamp = ros::Time::now();
-      //msg.header.seq = seq;
       nav_msgs::OccupancyGrid msg;
-      msg.header.frame_id = "/camera_link";
+      msg.header.frame_id = "/world";
       msg.header.stamp = ros::Time::now();
       msg.header.seq = seq;
       msg.info.map_load_time = ros::Time::now();
       msg.info.resolution = particles[best_particle_idx].resolution;
       msg.info.width = particles[best_particle_idx].map_num_grid_x;
       msg.info.height = particles[best_particle_idx].map_num_grid_y;
-      msg.info.origin.position.x = 7.5;
-      msg.info.origin.position.y = 7.5; 
+      msg.info.origin.position.x = -7.5;
+      msg.info.origin.position.y = -7.5; 
       msg.info.origin.position.z = 0.0;
 
       msg.info.origin.orientation.x = 0;
@@ -170,24 +172,7 @@ class Slam{
       publish_map.publish(msg);
       std::cout << "publish map " << std::endl;
 
-      /*  
-      // PUBLISH MAP
-       
-      for(int i = 0; i < particles[best_particle_idx].map_num_elements; i++){
-       
-        if (particles[best_particle_idx].map[i] > 80){
-            int index_map_pub[3];
-            reverse_index_conversion(index_map_pub, &particles[best_particle_idx], i);
 
-            point32.x = index_map_pub[0]*particles[best_particle_idx].resolution;
-            point32.y = -index_map_pub[1]*particles[best_particle_idx].resolution;
-            point32.z = 0;
-            msg.points.push_back(point32);
-        }     
-      }
-      /
-      publish_map.publish(msg);
-      */
 
     }
 
