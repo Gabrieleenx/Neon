@@ -105,7 +105,8 @@ double norm(double x1, double x2, double y1, double y2){
 }
 
 int index_conversion(int x, int y, Local_map* local_map){
-    return x*(local_map->grid_size) + y;
+    //return x*(local_map->grid_size) + y;
+    return y*(local_map->grid_size) + x;
 }
 
 void reverse_index_conversion(int index_out[3], Particle* particle, int index_in){
@@ -113,8 +114,8 @@ void reverse_index_conversion(int index_out[3], Particle* particle, int index_in
     int y;
     x = index_in/(particle->map_num_grid_x);
     y = index_in-x*(particle->map_num_grid_x);
-    index_out[0] = x;
-    index_out[1] = y;
+    index_out[0] = y;
+    index_out[1] = x;
 }
 
 void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff, Local_map* local_map){

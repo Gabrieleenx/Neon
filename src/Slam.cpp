@@ -133,17 +133,50 @@ class Slam{
       // moved? add to map
       std::cout << "Position x " <<particles[best_particle_idx].pos_x << " Position y " <<particles[best_particle_idx].pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
       // best position
-      quaternion.setRPY(0,0, particles[best_particle_idx].rot_z);
+      double rosEstZ = particles[best_particle_idx].rot_z + local_map_copy.rot;
+      quaternion.setRPY(0,0, rosEstZ);
+      double posEstX = local_map_copy.pos_x - local_map_copy.start_pos_x + particles[best_particle_idx].pos_x - particles[best_particle_idx].map_size_x/2.0;
+      double posEstY = local_map_copy.pos_y - local_map_copy.start_pos_y + particles[best_particle_idx].pos_y - particles[best_particle_idx].map_size_y/2.0;
+      std::cout << "Position x local" <<local_map_copy.pos_x - local_map_copy.start_pos_x<< " Position y " << local_map_copy.pos_y - local_map_copy.start_pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
+
       broadcaster.sendTransform(
         tf::StampedTransform(
-          tf::Transform(quaternion, tf::Vector3(particles[best_particle_idx].pos_x-7.5, particles[best_particle_idx].pos_y-7.5, 0)),
+          tf::Transform(quaternion, tf::Vector3(posEstX, posEstY, 0)),
           ros::Time::now(),"world", "robot"));
 
     }
 
     void publish_cloud_points(uint32_t seq){
       // creates pointcloud message and publish it. 
-      
+      //particle_map();
+      /*
+      sensor_msgs::PointCloud msg;
+      msg.header.frame_id = "/world";
+      msg.header.stamp = ros::Time::now();
+      msg.header.seq = seq;
+      geometry_msgs::Point32 point32;
+      std::cout << "publish map " << std::endl;
+
+      // PUBLISH MAP
+      for(int i = 0; i < particles[0].map_num_elements; i+=4){
+
+
+        for(int i = 0; i < particles[best_particle_idx].map_num_elements; i++){
+
+          if (particles[best_particle_idx].map[i] > 80){
+              int index_map_pub[3];
+              reverse_index_conversion(index_map_pub, &particles[best_particle_idx], i);
+
+              point32.x = index_map_pub[0]*particles[best_particle_idx].resolution - 7.5;
+              point32.y = index_map_pub[1]*particles[best_particle_idx].resolution - 7.5;
+              point32.z = 0;
+              msg.points.push_back(point32);
+          }     
+        }
+      }
+      publish_map.publish(msg);
+      */
+      // publish map
       nav_msgs::OccupancyGrid msg;
       msg.header.frame_id = "/world";
       msg.header.stamp = ros::Time::now();
@@ -171,7 +204,7 @@ class Slam{
 
       publish_map.publish(msg);
       std::cout << "publish map " << std::endl;
-
+      
 
 
     }
