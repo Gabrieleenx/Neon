@@ -226,7 +226,7 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         }
         // get x and y index
         local_map_index[1] = i/(local_map->grid_size);
-        local_map_index[0] = i - local_map_index[0]*(local_map->grid_size);
+        local_map_index[0] = i - local_map_index[1]*(local_map->grid_size);
         // subtact starting position 
         local_map_index[0] += -local_map_start_index_x;
         local_map_index[1] += -local_map_start_index_y;
