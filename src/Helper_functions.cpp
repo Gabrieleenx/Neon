@@ -13,7 +13,7 @@ void update_odometry(Odometry* odometry, Robot_intrinsics* robot_intrinsics, int
     double dist =  (robot_intrinsics->step_size)*(diff_right + diff_left)/2.0;
 
     odometry->pos_y += dist * cos((odometry->rot) + rotation_diff/2);
-    odometry->pos_x += -dist * sin((odometry->rot) + rotation_diff/2);
+    odometry->pos_x += -dist * sin((odometry->rot) + rotation_diff/2); 
     odometry->rot += rotation_diff;
 
     odometry->previous_encoder_L = count_left;
@@ -109,6 +109,7 @@ int index_conversion(int x, int y, Local_map* local_map){
     return y*(local_map->grid_size) + x;
 }
 
+/*
 void reverse_index_conversion(int index_out[3], Particle* particle, int index_in){
     int x;
     int y;
@@ -117,6 +118,7 @@ void reverse_index_conversion(int index_out[3], Particle* particle, int index_in
     index_out[0] = y;
     index_out[1] = x;
 }
+*/
 
 void update_local_map(Depth_data* depth_data, Orientation_diff* orientation_diff, Local_map* local_map){
     int indx[2];
@@ -223,8 +225,8 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
             continue;
         }
         // get x and y index
-        local_map_index[0] = i/(local_map->grid_size);
-        local_map_index[1] = i - local_map_index[0]*(local_map->grid_size);
+        local_map_index[1] = i/(local_map->grid_size);
+        local_map_index[0] = i - local_map_index[0]*(local_map->grid_size);
         // subtact starting position 
         local_map_index[0] += -local_map_start_index_x;
         local_map_index[1] += -local_map_start_index_y;
@@ -236,7 +238,7 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         Tx = rotated_index[0] + particle->pos_x / particle->resolution;
         Ty = rotated_index[1] + particle->pos_y / particle->resolution;
         //particle_map_index = (local_map_index[0] + Tx)*(particle->map_num_grid_x) + local_map_index[1] + Ty;
-        particle_map_index = Tx*(particle->map_num_grid_y) + Ty;
+        particle_map_index = Ty*(particle->map_num_grid_y) + Tx;
         //std::cout << "particle_map_index " << particle_map_index << std::endl;
         // check if inside map
         if(particle_map_index < 0 || particle_map_index > particle->map_num_elements){
@@ -245,7 +247,6 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
 
         // for obstructed space
         if (local_map->map[i] > 20){
-    
             particle->scan_score += particle->map[particle_map_index] - particle->initial_value;
             particle->num_scan_checs += 1;
         }

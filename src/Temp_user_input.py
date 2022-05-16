@@ -13,17 +13,17 @@ if __name__ == '__main__':
         speed_L = 0
         speed_R = 0
         if dir == 'w':
-            speed_L = 0.2
-            speed_R = 0.2
+            speed_L = 0.3
+            speed_R = 0.3
         elif dir == 's':
-            speed_L = 0
-            speed_R = 0
+            speed_L = -0.1
+            speed_R = -0.1
         elif dir == 'a':
-            speed_L = -0.2
-            speed_R = 0.2
+            speed_L = -0.1
+            speed_R = 0.1
         elif dir == 'd':
-            speed_L = 0.2
-            speed_R = -0.2
+            speed_L = 0.1
+            speed_R = -0.1
 
         msg.left = speed_L
         msg.right = speed_R
