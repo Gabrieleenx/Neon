@@ -254,7 +254,7 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         
         else if (local_map->map[i] < -35)
         {
-            particle->scan_score += -(particle->map[particle_map_index] - particle->initial_value);
+            particle->scan_score += -0.05*(particle->map[particle_map_index] - particle->initial_value);
             particle->num_scan_checs += 1;
         }
         
@@ -262,7 +262,7 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         if (particle->add_points == 0){
             continue;
         }
-        new_value = particle->map[particle_map_index] + local_map->map[i];
+        new_value = particle->map[particle_map_index] + 0.1*local_map->map[i];
         if (new_value < 0){
             particle->map[particle_map_index] = 0;
         }

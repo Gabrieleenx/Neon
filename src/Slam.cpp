@@ -39,7 +39,7 @@ class Slam{
     Depth_data depth_data{camera_intrinsics.res_h};
     Local_map local_map;
     Local_map local_map_copy;
-    const static int num_particles = 250; 
+    const static int num_particles = 500; 
     Particle* particles = new Particle[num_particles];
     ros::Subscriber depth_sub;
     ros::Subscriber encoder_sub;
@@ -49,7 +49,7 @@ class Slam{
     int best_particle_idx = 0;
 
     void callback(const sensor_msgs::Image::ConstPtr& image_data){
-
+      std::cout << "image in" << std::endl;
       mtx_odometry.lock();
       update_orientation_diff(&orientation_diff, &odometry, &odometry_previous);
       odometry_previous = odometry;
@@ -99,8 +99,8 @@ class Slam{
 
       std::random_device rd; // create random random seed
       std::mt19937 gen(rd()); // put the seed inte the random generator 
-      std::normal_distribution<float> pos_d(0, 0.03); // create a distrobution
-      std::normal_distribution<float> rot_d(0, 0.02); // create a distrobution
+      std::normal_distribution<float> pos_d(0, 0.05); // create a distrobution
+      std::normal_distribution<float> rot_d(0, 0.1); // create a distrobution
       for (int i = 0; i < num_particles; i++){
         // update map
         updatate_particle_map(&particles[i], &local_map_copy);
@@ -131,7 +131,7 @@ class Slam{
       resample(particles, num_particles, &best_particle_idx);
 
       // moved? add to map
-      std::cout << "Position x " <<particles[best_particle_idx].pos_x << " Position y " <<particles[best_particle_idx].pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
+      std::cout << "Position x " <<particles[best_particle_idx].pos_x << " Position y " <<particles[best_particle_idx].pos_y << " rot " << particles[best_particle_idx].rot_z  << " best " <<  particles[best_particle_idx].scan_score << std::endl;
       // best position
       double rosEstZ = particles[best_particle_idx].rot_z + local_map_copy.rot;
       quaternion.setRPY(0,0, rosEstZ);
@@ -233,11 +233,11 @@ int main(int argc, char** argv){
     uint32_t seq = 1;
 
     while (ros::ok()){
-        slam.publish_cloud_points(seq);
-        ros::spinOnce();
         if(slam.local_map_updated == 1){
             slam.particle_filter_update();
         }
+        slam.publish_cloud_points(seq);
+        ros::spinOnce();
         loop_rate.sleep();
         ++seq;
     }
