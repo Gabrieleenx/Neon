@@ -62,7 +62,7 @@ class Slam{
       mtx_local_map.unlock();
 
             // best position
-      double rosEstZ = particles[best_particle_idx].rot_z + local_map_copy.rot;
+      double rosEstZ = particles[best_particle_idx].rot_z + local_map.rot;
       quaternion.setRPY(0,0, rosEstZ);
 
       double posEstX = cos(particles[best_particle_idx].rot_z)*(local_map.pos_x - local_map.start_pos_x) - 
