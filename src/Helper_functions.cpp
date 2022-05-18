@@ -20,9 +20,24 @@ void update_odometry(Odometry* odometry, Robot_intrinsics* robot_intrinsics, int
     odometry->previous_encoder_R = count_right;
 };
 
+
+void rotation_matrix(double matrix[2][2], double z){
+    matrix[0][0] = cos(z);
+    matrix[0][1] = -sin(z);
+    matrix[1][0] = sin(z);
+    matrix[1][1] = cos(z);
+}
+
+
 void update_orientation_diff(Orientation_diff* orientation_diff, Odometry* odometry_current, Odometry* odometry_previous){
-    orientation_diff->pos_x = odometry_current->pos_x - odometry_previous->pos_x;
-    orientation_diff->pos_y = odometry_current->pos_y - odometry_previous->pos_y;
+    // TODO rotoate points 
+    double dx =  odometry_current->pos_x - odometry_previous->pos_x;
+    double dy =  odometry_current->pos_y - odometry_previous->pos_y;
+    double r = odometry_previous->rot;
+    double Rot_M[2][2];
+    rotation_matrix(Rot_M, -r);
+    orientation_diff->pos_x = Rot_M[0][0] * dx + Rot_M[0][1] * dy;
+    orientation_diff->pos_y = Rot_M[1][0] * dx + Rot_M[1][1] * dy;
     orientation_diff->rot = odometry_current->rot - odometry_previous->rot;
 };
 
@@ -75,12 +90,7 @@ void update_depth_data(Depth_data* depth_data, Camera_intrinsics* camera_intrins
 
 }
 
-void rotation_matrix(double matrix[2][2], double z){
-    matrix[0][0] = cos(z);
-    matrix[0][1] = -sin(z);
-    matrix[1][0] = sin(z);
-    matrix[1][1] = cos(z);
-}
+
 
 
 void rotate_points(double new_point[][2], double point[][2], int num_points, double z){
@@ -257,35 +267,7 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
             particle->scan_score += -0.05*(particle->map[particle_map_index] - particle->initial_value);
             particle->num_scan_checs += 1;
         }
-    }
-    for (int i = 0; i < local_map->map_elements; i++){
-
-
-
-        if (local_map->map[i] == 0){
-            continue;
-        }
-
-                // get x and y index
-        local_map_index[1] = i/(local_map->grid_size);
-        local_map_index[0] = i - local_map_index[1]*(local_map->grid_size);
-        // subtact starting position 
-        local_map_index[0] += -local_map_start_index_x;
-        local_map_index[1] += -local_map_start_index_y;
-        // rotate index
-        rotated_index[0] = Rot_M[0][0] * local_map_index[0] + Rot_M[0][1] * local_map_index[1];
-        rotated_index[1] = Rot_M[1][0] * local_map_index[0] + Rot_M[1][1] * local_map_index[1];
-
-        // particle map index 
-        Tx = rotated_index[0] + particle->pos_x / particle->resolution;
-        Ty = rotated_index[1] + particle->pos_y / particle->resolution;
-        //particle_map_index = (local_map_index[0] + Tx)*(particle->map_num_grid_x) + local_map_index[1] + Ty;
-        particle_map_index = Ty*(particle->map_num_grid_y) + Tx;
-        //std::cout << "particle_map_index " << particle_map_index << std::endl;
-        // check if inside map
-        if(particle_map_index < 0 || particle_map_index > particle->map_num_elements){
-            continue;
-        }
+        
         // add to map 
         if (particle->add_points == 0){
             continue;
