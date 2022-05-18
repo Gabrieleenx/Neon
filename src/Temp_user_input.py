@@ -13,8 +13,8 @@ if __name__ == '__main__':
         speed_L = 0
         speed_R = 0
         if dir == 'w':
-            speed_L = 0.1
-            speed_R = 0.1
+            speed_L = 0.2
+            speed_R = 0.2
         elif dir == 's':
             speed_L = -0.1
             speed_R = -0.1

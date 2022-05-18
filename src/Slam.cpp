@@ -77,6 +77,7 @@ class Slam{
         tf::StampedTransform(
           tf::Transform(quaternion, tf::Vector3(posEstX, posEstY, 0)),
           ros::Time::now(),"world", "robot"));
+      ros::spinOnce();
 
       local_map_updated = 1;
       
