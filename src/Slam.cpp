@@ -61,6 +61,18 @@ class Slam{
       update_local_map(&depth_data, &orientation_diff, &local_map);
       mtx_local_map.unlock();
 
+            // best position
+      double rosEstZ = particles[best_particle_idx].rot_z + local_map_copy.rot;
+      quaternion.setRPY(0,0, rosEstZ);
+      double posEstX = local_map.pos_x - local_map.start_pos_x + particles[best_particle_idx].pos_x - particles[best_particle_idx].map_size_x/2.0;
+      double posEstY = local_map.pos_y - local_map.start_pos_y + particles[best_particle_idx].pos_y - particles[best_particle_idx].map_size_y/2.0;
+      std::cout << "Position x local" <<local_map.pos_x - local_map.start_pos_x<< " Position y " << local_map.pos_y - local_map.start_pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
+
+      broadcaster.sendTransform(
+        tf::StampedTransform(
+          tf::Transform(quaternion, tf::Vector3(posEstX, posEstY, 0)),
+          ros::Time::now(),"world", "robot"));
+
       local_map_updated = 1;
       
     }
@@ -132,17 +144,7 @@ class Slam{
 
       // moved? add to map
       std::cout << "Position x " <<particles[best_particle_idx].pos_x << " Position y " <<particles[best_particle_idx].pos_y << " rot " << particles[best_particle_idx].rot_z  << " best " <<  particles[best_particle_idx].scan_score << std::endl;
-      // best position
-      double rosEstZ = particles[best_particle_idx].rot_z + local_map_copy.rot;
-      quaternion.setRPY(0,0, rosEstZ);
-      double posEstX = local_map_copy.pos_x - local_map_copy.start_pos_x + particles[best_particle_idx].pos_x - particles[best_particle_idx].map_size_x/2.0;
-      double posEstY = local_map_copy.pos_y - local_map_copy.start_pos_y + particles[best_particle_idx].pos_y - particles[best_particle_idx].map_size_y/2.0;
-      std::cout << "Position x local" <<local_map_copy.pos_x - local_map_copy.start_pos_x<< " Position y " << local_map_copy.pos_y - local_map_copy.start_pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
 
-      broadcaster.sendTransform(
-        tf::StampedTransform(
-          tf::Transform(quaternion, tf::Vector3(posEstX, posEstY, 0)),
-          ros::Time::now(),"world", "robot"));
 
     }
 
