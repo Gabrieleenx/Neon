@@ -257,7 +257,11 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
             particle->scan_score += -0.05*(particle->map[particle_map_index] - particle->initial_value);
             particle->num_scan_checs += 1;
         }
-        
+    }
+    for (int i = 0; i < local_map->map_elements; i++){
+        if (local_map->map[i] == 0){
+            continue;
+        }
         // add to map 
         if (particle->add_points == 0){
             continue;
