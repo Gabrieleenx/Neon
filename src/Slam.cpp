@@ -65,11 +65,11 @@ class Slam{
       double rosEstZ = particles[best_particle_idx].rot_z + local_map_copy.rot;
       quaternion.setRPY(0,0, rosEstZ);
 
-      double posEstX = cos(particles[best_particle_idx].rot_z)*(local_map_copy.pos_x - local_map_copy.start_pos_x) - 
-                      sin(particles[best_particle_idx].rot_z)*(local_map_copy.pos_y - local_map_copy.start_pos_y) - 
+      double posEstX = cos(particles[best_particle_idx].rot_z)*(local_map.pos_x - local_map.start_pos_x) - 
+                      sin(particles[best_particle_idx].rot_z)*(local_map.pos_y - local_map.start_pos_y) - 
                       particles[best_particle_idx].map_size_x/2.0 + particles[best_particle_idx].pos_x;
-      double posEstY = cos(particles[best_particle_idx].rot_z)*(local_map_copy.pos_y - local_map_copy.start_pos_y) + 
-                      sin(particles[best_particle_idx].rot_z)*(local_map_copy.pos_x - local_map_copy.start_pos_x) - 
+      double posEstY = cos(particles[best_particle_idx].rot_z)*(local_map.pos_y - local_map.start_pos_y) + 
+                      sin(particles[best_particle_idx].rot_z)*(local_map.pos_x - local_map.start_pos_x) - 
                       particles[best_particle_idx].map_size_y/2.0 + particles[best_particle_idx].pos_y;
       std::cout << "Position x local" <<local_map.pos_x - local_map.start_pos_x<< " Position y " << local_map.pos_y - local_map.start_pos_y << " rot " << particles[best_particle_idx].rot_z  << std::endl;
 
