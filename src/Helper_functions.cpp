@@ -262,7 +262,7 @@ void updatate_particle_map(Particle* particle, Local_map* local_map){
         if (particle->add_points == 0){
             continue;
         }
-        new_value = particle->map[particle_map_index] + 0.1*local_map->map[i];
+        new_value = particle->map[particle_map_index] + 0.5*local_map->map[i];
         if (new_value < 0){
             particle->map[particle_map_index] = 0;
         }
